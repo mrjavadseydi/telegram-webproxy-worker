@@ -1,0 +1,7 @@
+name = "telegram-web-proxy"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Paid plan: raise the per-invocation CPU budget (one invocation = one Telegram TCP stream).
+# [limits]
+# cpu_ms = 300000
