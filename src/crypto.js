@@ -44,3 +44,60 @@ export async function checkToken(key, kind, token, now = Date.now()) {
   for (let i = 0; i < 24; i++) diff |= mac[i] ^ t[8 + i];
   return diff === 0;
 }
+
+const MASK128 = (1n << 128n) - 1n;
+const toBig = (b) => b.reduce((n, x) => (n << 8n) | BigInt(x), 0n);
+const sha256 = async (...parts) => {
+  const all = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((off, p) => (all.set(p, off), off + p.length), 0);
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', all));
+};
+
+// Streaming AES-256-CTR on top of one-shot WebCrypto: track the byte position, start each call at
+// counter iv + pos/16 and pad the partial first block. Position advances synchronously, so calls
+// issued in order stay correct even if their promises overlap.
+export class CtrStream {
+  static async create(key, iv) {
+    return new CtrStream(await crypto.subtle.importKey('raw', key, 'AES-CTR', false, ['encrypt']), toBig(iv));
+  }
+  constructor(key, iv) { this.key = key; this.iv = iv; this.pos = 0; }
+  async update(data) {
+    const skip = this.pos % 16;
+    let n = (this.iv + BigInt(Math.floor(this.pos / 16))) & MASK128;
+    const counter = new Uint8Array(16);
+    for (let i = 15; i >= 0; i--, n >>= 8n) counter[i] = Number(n & 0xffn);
+    const buf = new Uint8Array(skip + data.length);
+    buf.set(data, skip);
+    this.pos += data.length;
+    return new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CTR', counter, length: 128 }, this.key, buf)).subarray(skip);
+  }
+}
+
+const TAGS = [0xef, 0xee, 0xdd];
+
+// Client side of obfuscated2: keys mixed with the proxy secret. Returns protocol tag and DC id.
+export async function clientHandshake(h, secretKey) {
+  const rev = Uint8Array.from(h.subarray(8, 56)).reverse();
+  const decrypt = await CtrStream.create(await sha256(h.subarray(8, 40), secretKey), h.subarray(40, 56));
+  const encrypt = await CtrStream.create(await sha256(rev.subarray(0, 32), secretKey), rev.subarray(32, 48));
+  const plain = await decrypt.update(h);
+  const tag = plain.slice(56, 60);
+  if (!TAGS.includes(tag[0]) || !tag.every((x) => x === tag[0])) throw new Error('bad obfuscated2 header (wrong secret?)');
+  const dc = new DataView(plain.buffer, plain.byteOffset).getInt16(60, true);
+  return { tag, dc, decrypt, encrypt };
+}
+
+// Telegram DC side of obfuscated2: fresh random header, keys without a secret.
+const BAD_START = ['HEAD', 'POST', 'GET ', 'OPTI'].map((s) => toBig(new TextEncoder().encode(s)))
+  .concat([0x16030102n, 0xddddddddn, 0xeeeeeeeen]);
+export async function dcHandshake(tag) {
+  let h;
+  do h = crypto.getRandomValues(new Uint8Array(64));
+  while (h[0] === 0xef || BAD_START.includes(toBig(h.subarray(0, 4))) || toBig(h.subarray(4, 8)) === 0n);
+  h.set(tag, 56);
+  const rev = Uint8Array.from(h.subarray(8, 56)).reverse();
+  const encrypt = await CtrStream.create(h.slice(8, 40), h.slice(40, 56));
+  const decrypt = await CtrStream.create(rev.subarray(0, 32), rev.subarray(32, 48));
+  h.set((await encrypt.update(h)).subarray(56), 56);
+  return { header: h, encrypt, decrypt };
+}
