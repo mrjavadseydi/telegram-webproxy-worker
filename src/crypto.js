@@ -10,7 +10,7 @@ export function parseSecret(text) {
   const s = (text || '').trim().toLowerCase();
   if (!/^(dd)?[0-9a-f]{32}$/.test(s)) throw new Error('SECRET must be 32 hex chars, optionally dd-prefixed');
   const raw = fromHex(s);
-  return { raw, key: raw.slice(raw.length - 16) }; // raw feeds the capability, key feeds obfuscated2
+  return { hex: s, raw, key: raw.slice(raw.length - 16) }; // raw feeds the capability, key feeds obfuscated2
 }
 
 export async function hmac(key, data) {

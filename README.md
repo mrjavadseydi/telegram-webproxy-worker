@@ -46,6 +46,10 @@ Or share the link:
 https://t.me/webproxy?server=proxy.example.com&secret=8561944064fc730cbfa4473562d8ec59
 ```
 
+The Worker also serves this at `https://proxy.example.com/<SECRET>`: server, secret, the
+`t.me` and `tg://` links with copy buttons, and an "Open in Telegram" button. Every other path
+shows the placeholder site, so only someone who already has the secret can find the page.
+
 ## Check it
 
 ```bash
