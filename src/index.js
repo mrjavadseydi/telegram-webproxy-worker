@@ -1,5 +1,6 @@
 import { b64url, capability, checkToken, hmac, mintToken, parseSecret } from './crypto.js';
 import { bridgeHeaders, bridgeHtml } from './bridge.js';
+import { openLane } from './lane.js';
 
 const BOOTSTRAP = 1, SESSION = 2;
 const HELLO = Uint8Array.of(0x10, 0, 0, 0, 0, 0, 0, 1, 1);
@@ -44,6 +45,12 @@ export default {
         });
       }
       if (request.method === 'DELETE' && (await checkToken(key, SESSION, token))) return new Response(null, { status: 204 });
+    }
+
+    if (url.pathname === '/api/v1/ws' && request.headers.get('Upgrade') === 'websocket') {
+      const protocol = request.headers.get('Sec-WebSocket-Protocol') || '';
+      const m = /^tproxy-lane-v1\.([A-Za-z0-9_-]{43})\.([1-9]\d{0,7})$/.exec(protocol);
+      if (m && +m[2] <= 0xffffff && (await checkToken(key, SESSION, m[1]))) return openLane(+m[2], secret.key, protocol);
     }
     return decoy();
   },
