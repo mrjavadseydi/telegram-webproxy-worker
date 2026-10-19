@@ -10,6 +10,20 @@ A server for Telegram's new **WEB proxy** type
 ([`telegramdesktop/tproxy-server`](https://github.com/telegramdesktop/tproxy-server), protocol v1),
 running entirely on a Cloudflare Worker. You don't need a VPS or an MTProxy binary.
 
+> [!CAUTION]
+> **DISCLAIMER — READ BEFORE USING**
+>
+> - **This project is published strictly for educational and research purposes only.**
+> - **The author does not encourage, endorse, or support any illegal, unauthorized, or abusive use of this project.**
+> - **You must not use this project to violate any law, regulation, court order, or terms of service (including those of Cloudflare and Telegram) in your country or any other jurisdiction.**
+> - **You alone are fully and solely responsible for how you use this project and for any consequences of that use, including compliance with all applicable laws.**
+> - **This software is provided "AS IS", without warranty of any kind, express or implied. The author makes no guarantee about its security, reliability, legality, or fitness for any purpose.**
+> - **To the maximum extent permitted by law, the author is not liable for any claim, damage, loss, penalty, or legal consequence arising from the use, misuse, deployment, modification, or distribution of this project, whether by you or by anyone else.**
+> - **By using, deploying, copying, or modifying this project, you agree to these terms and agree to hold the author harmless and indemnify the author against any claim arising from your use.**
+> - **This project is not affiliated with, endorsed by, or sponsored by Telegram or Cloudflare. All trademarks belong to their respective owners.**
+>
+> **If you do not agree with these terms, do not use this project.**
+
 ```text
 Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> Worker ──TCP──> Telegram DC
 ```
@@ -90,11 +104,3 @@ argument picks the DC (default `2`).
   and only by someone who already loaded the bridge.
 - Secrets can be plain or `dd` (padded). `ee` (fake-TLS) secrets are not supported.
 - The protocol is a Telegram proof of concept and may change.
-
-## Disclaimer
-
-This project is provided for **educational and research purposes only**. Do not use it to
-violate any law, regulation, or terms of service, including Cloudflare's and Telegram's. You
-are solely responsible for how you use it. The software is provided "as is", without warranty
-of any kind, and the author accepts no responsibility or liability for any use or misuse of it
-or for any damage it may cause.
