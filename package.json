@@ -14,7 +14,7 @@
   "cloudflare": {
     "bindings": {
       "SECRET": {
-        "description": "Choose **any password of at least 8 characters** (longer is safer). After deploy, open `https://<your-worker-host>/<password>` to get your Telegram proxy link. Keep it private."
+        "description": "Choose **any password of at least 8 characters** (longer is safer). After deploy, open your Worker address followed by `/` and your password, for example `https://YOUR-WORKER.workers.dev/YOUR-PASSWORD`, to get your Telegram proxy link. Keep it private."
       }
     }
   }

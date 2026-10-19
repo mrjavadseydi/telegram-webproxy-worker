@@ -1,1 +1,1 @@
-SECRET= # any password, at least 8 characters (longer is safer). Your link is then at https://<worker-host>/<password>
+SECRET= # any password, at least 8 characters (longer is safer). Your proxy link is then at https://YOUR-WORKER.workers.dev/YOUR-PASSWORD
