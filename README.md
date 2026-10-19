@@ -85,3 +85,11 @@ argument picks the DC (default `2`).
   and only by someone who already loaded the bridge.
 - Secrets can be plain or `dd` (padded). `ee` (fake-TLS) secrets are not supported.
 - The protocol is a Telegram proof of concept and may change.
+
+## Disclaimer
+
+This project is provided for **educational and research purposes only**. Do not use it to
+violate any law, regulation, or terms of service, including Cloudflare's and Telegram's. You
+are solely responsible for how you use it. The software is provided "as is", without warranty
+of any kind, and the author accepts no responsibility or liability for any use or misuse of it
+or for any damage it may cause.
