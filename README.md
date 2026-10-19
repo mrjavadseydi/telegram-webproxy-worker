@@ -39,21 +39,33 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
 
 ## Deploy
 
-**One click:** press the button above. Cloudflare copies the repo into your GitHub account,
+**Easiest — paste one file (no GitHub, no fork, only a browser):**
+
+1. In the Cloudflare dashboard go to **Workers & Pages → Create → Create Worker**, keep the "Hello World" code and press **Deploy**.
+2. Press **Edit code**, delete everything, paste the whole content of [`worker.js`](https://raw.githubusercontent.com/mrjavadseydi/telegram-webproxy-worker/main/worker.js), and press **Deploy**.
+3. Go to the Worker's **Settings → Variables and Secrets → Add**: type **Secret**, name `SECRET`, value any password of 8+ characters. Save and deploy.
+4. Open `https://<your-worker>.<your-subdomain>.workers.dev/<your-password>` to get your proxy link.
+
+To update later, paste the new `worker.js` again. Your `SECRET` stays.
+
+**One click (makes a copy of this repo in your GitHub):** press the button above. Cloudflare copies the repo into your GitHub account,
 asks for `SECRET` (**any password of 8+ characters**), and deploys. Then open
 `https://<your-worker-host>/<your-password>` to get your proxy link.
 
 `SECRET` can be a password (the Worker turns it into the MTProxy secret with SHA-256) or a raw
 32-hex MTProxy secret, for example from `openssl rand -hex 16`.
 
-**Manually:**
+**With the CLI:**
 
 ```bash
 npm install
-openssl rand -hex 16                # your secret, e.g. 8561944064fc730cbfa4473562d8ec59
-npx wrangler secret put SECRET      # name is literally SECRET; paste a password or the hex value at the prompt
-npx wrangler deploy
+SECRET='your password' npm run deploy   # deploys, stores SECRET, prints your full proxy page URL
 ```
+
+The end of the output shows the full URL of your proxy details page and the Telegram link in a
+highlighted box. Without `SECRET=…` it deploys and prints `https://<your-worker>/<your SECRET>`.
+
+After editing `src/`, run `npm run bundle` to regenerate `worker.js`.
 
 Add a **custom domain** to the Worker (Workers → Settings → Domains & Routes), for example
 `proxy.example.com`. `*.workers.dev` also works, but it is blocked in some networks. The

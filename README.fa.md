@@ -41,22 +41,31 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
 
 ## راه‌اندازی
 
-**با یک کلیک:** دکمه‌ی بالا را بزنید. Cloudflare یک کپی از مخزن در گیت‌هاب شما می‌سازد، مقدار `SECRET` را می‌پرسد (**هر رمزی با حداقل ۸ کاراکتر**؛ هرچه بلندتر، امن‌تر) و Worker را منتشر می‌کند. بعد آدرس `https://<your-worker-host>/<your-password>` را باز کنید تا لینک پروکسی‌تان را ببینید.
+**ساده‌ترین روش: کپی یک فایل (بدون گیت‌هاب، بدون fork، فقط با مرورگر):**
+
+1. در داشبورد Cloudflare به **Workers & Pages → Create → Create Worker** بروید، همان کد «Hello World» را نگه دارید و **Deploy** را بزنید.
+2. **Edit code** را بزنید، همه‌ی کد را پاک کنید، کل محتوای فایل [`worker.js`](https://raw.githubusercontent.com/mrjavadseydi/telegram-webproxy-worker/main/worker.js) را جایگذاری کنید و **Deploy** را بزنید.
+3. در **Settings → Variables and Secrets → Add** یک متغیر از نوع **Secret** با نام `SECRET` بسازید و مقدار آن را هر رمزی با حداقل ۸ کاراکتر بگذارید. ذخیره و Deploy کنید.
+4. آدرس `https://<your-worker>.<your-subdomain>.workers.dev/<your-password>` را باز کنید تا لینک پروکسی‌تان را ببینید.
+
+برای به‌روزرسانی، کافی است `worker.js` جدید را دوباره جایگذاری کنید. مقدار `SECRET` باقی می‌ماند.
+
+**با یک کلیک (یک کپی از این مخزن در گیت‌هاب شما ساخته می‌شود):** دکمه‌ی بالا را بزنید. Cloudflare یک کپی از مخزن در گیت‌هاب شما می‌سازد، مقدار `SECRET` را می‌پرسد (**هر رمزی با حداقل ۸ کاراکتر**؛ هرچه بلندتر، امن‌تر) و Worker را منتشر می‌کند. بعد آدرس `https://<your-worker-host>/<your-password>` را باز کنید تا لینک پروکسی‌تان را ببینید.
 
 مقدار `SECRET` می‌تواند یک رمز باشد (Worker با SHA-256 آن را به سکرت MTProxy تبدیل می‌کند) یا مستقیماً یک سکرت ۳۲ کاراکتری hex، مثلاً خروجی `openssl rand -hex 16`.
 
-**به‌صورت دستی:**
+**با خط فرمان (CLI):**
 
 </div>
 
 ```bash
 npm install
-openssl rand -hex 16                # your secret, e.g. 8561944064fc730cbfa4473562d8ec59
-npx wrangler secret put SECRET      # name is literally SECRET; paste the hex value at the prompt
-npx wrangler deploy
+SECRET='your password' npm run deploy   # deploys, stores SECRET, prints your full proxy page URL
 ```
 
 <div dir="rtl">
+
+در انتهای خروجی، آدرس کامل صفحه‌ی مشخصات پروکسی و لینک تلگرام در یک کادر برجسته نشان داده می‌شود. اگر `SECRET=…` را ندهید، فقط deploy می‌کند و آدرس را به شکل `https://<your-worker>/<your SECRET>` نشان می‌دهد.
 
 > **دقت کنید:** اسم سکرت دقیقاً `SECRET` است. دستور `wrangler secret put SECRET` را بزنید و رمز یا مقدار hex را وقتی پرسید وارد کنید. اگر خود مقدار را جای اسم بنویسید، Worker سکرتی پیدا نمی‌کند.
 
