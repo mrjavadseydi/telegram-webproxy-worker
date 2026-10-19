@@ -4,6 +4,8 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mrjavadseydi/telegram-webproxy-worker)
 
+⭐ **If you like this project, please [give it a star](https://github.com/mrjavadseydi/telegram-webproxy-worker) to support me.**
+
 A server for Telegram's new **WEB proxy** type
 ([`telegramdesktop/tproxy-server`](https://github.com/telegramdesktop/tproxy-server), protocol v1),
 running entirely on a Cloudflare Worker. You don't need a VPS or an MTProxy binary.
@@ -24,15 +26,18 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
 ## Deploy
 
 **One click:** press the button above. Cloudflare copies the repo into your GitHub account,
-asks for `SECRET` (32 hex chars, e.g. `openssl rand -hex 16`), and deploys. Then open
-`https://<your-worker-host>/<SECRET>` for your proxy link.
+asks for `SECRET` (**any password of 8+ characters**), and deploys. Then open
+`https://<your-worker-host>/<your-password>` to get your proxy link.
+
+`SECRET` can be a password (the Worker turns it into the MTProxy secret with SHA-256) or a raw
+32-hex MTProxy secret, for example from `openssl rand -hex 16`.
 
 **Manually:**
 
 ```bash
 npm install
 openssl rand -hex 16                # your secret, e.g. 8561944064fc730cbfa4473562d8ec59
-npx wrangler secret put SECRET      # name is literally SECRET; paste the hex value at the prompt
+npx wrangler secret put SECRET      # name is literally SECRET; paste a password or the hex value at the prompt
 npx wrangler deploy
 ```
 
@@ -56,7 +61,7 @@ Or share the link:
 https://t.me/webproxy?server=proxy.example.com&secret=8561944064fc730cbfa4473562d8ec59
 ```
 
-The Worker also serves this at `https://proxy.example.com/<SECRET>`: server, secret, the
+The Worker also serves this at `https://proxy.example.com/<SECRET>` (your password or hex): server, secret, the
 `t.me` and `tg://` links with copy buttons, and an "Open in Telegram" button. Every other path
 shows the placeholder site, so only someone who already has the secret can find the page.
 

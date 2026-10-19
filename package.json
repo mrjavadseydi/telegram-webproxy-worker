@@ -13,7 +13,7 @@
   "cloudflare": {
     "bindings": {
       "SECRET": {
-        "description": "Proxy secret: **32 hex characters** (`0-9a-f`), e.g. the output of `openssl rand -hex 16`. Clients enter it next to the Worker hostname; keep it private."
+        "description": "Choose **any password of at least 8 characters** (longer is safer). After deploy, open `https://<your-worker-host>/<password>` to get your Telegram proxy link. Keep it private."
       }
     }
   }

@@ -55,11 +55,13 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     let secret;
-    try { secret = parseSecret(env.SECRET); } catch (e) { return new Response(e.message + ' (npx wrangler secret put SECRET)', { status: 500 }); }
+    try { secret = await parseSecret(env.SECRET); } catch (e) { return new Response(e.message + ' (npx wrangler secret put SECRET)', { status: 500 }); }
     const host = url.hostname;
     const key = await hmac(secret.raw, new TextEncoder().encode('tproxy-worker-token-key'));
+    let path = '';
+    try { path = decodeURIComponent(url.pathname.slice(1)); } catch {}
 
-    if (request.method === 'GET' && url.pathname === '/' + secret.hex) {
+    if (request.method === 'GET' && (path === secret.password || path === secret.hex)) {
       return new Response(sharePage(host, secret.hex), {
         headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' },
       });

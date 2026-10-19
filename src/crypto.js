@@ -5,12 +5,16 @@ export const b64url = (bytes) =>
 
 export const fromHex = (s) => Uint8Array.from(s.match(/../g), (b) => parseInt(b, 16));
 
-// SECRET is 32 hex chars, optionally prefixed with "dd" (padded-intermediate mode).
-export function parseSecret(text) {
-  const s = (text || '').trim().toLowerCase();
-  if (!/^(dd)?[0-9a-f]{32}$/.test(s)) throw new Error('SECRET must be 32 hex chars, optionally dd-prefixed');
-  const raw = fromHex(s);
-  return { hex: s, raw, key: raw.slice(raw.length - 16) }; // raw feeds the capability, key feeds obfuscated2
+// SECRET is either an MTProxy secret (32 hex chars, optionally "dd"-prefixed) or any password of
+// 8+ characters, which becomes one: the first 16 bytes of SHA-256(password).
+export async function parseSecret(text) {
+  const password = (text || '').trim();
+  let raw;
+  if (/^(dd)?[0-9a-f]{32}$/i.test(password)) raw = fromHex(password.toLowerCase());
+  else if (password.length >= 8) raw = (await sha256(enc.encode(password))).slice(0, 16);
+  else throw new Error('SECRET must be a password of at least 8 characters (or 32 hex chars)');
+  const hex = [...raw].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return { password, hex, raw, key: raw.slice(raw.length - 16) }; // raw feeds the capability, key feeds obfuscated2
 }
 
 export async function hmac(key, data) {

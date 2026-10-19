@@ -1,1 +1,1 @@
-SECRET=replace-with-32-hex-chars # e.g. output of: openssl rand -hex 16
+SECRET= # any password, at least 8 characters (longer is safer). Your link is then at https://<worker-host>/<password>

@@ -1,11 +1,11 @@
-// End-to-end probe: node smoke.mjs <base-url> <secret-hex> [dc]
+// End-to-end probe: node smoke.mjs <base-url> <SECRET> [dc]   (SECRET = the password or hex you set)
 // Walks bridge -> session -> lane WebSocket -> Telegram DC and expects resPQ for req_pq_multi.
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
-import { capability, fromHex } from './src/crypto.js';
+import { capability, parseSecret } from './src/crypto.js';
 
-const [base, secretHex, dc = '2'] = process.argv.slice(2);
-if (!base || !secretHex) throw new Error('usage: node smoke.mjs <base-url> <secret-hex> [dc]');
-const url = new URL(base), raw = fromHex(secretHex.toLowerCase()), secret = raw.subarray(raw.length - 16);
+const [base, secretArg, dc = '2'] = process.argv.slice(2);
+if (!base || !secretArg) throw new Error('usage: node smoke.mjs <base-url> <SECRET> [dc]');
+const url = new URL(base), { raw, key: secret } = await parseSecret(secretArg);
 
 const page = await (await fetch(`${url.origin}/?bridge=${await capability(url.hostname, raw)}`)).text();
 const boot = /const boot="([^"]+)"/.exec(page)?.[1];

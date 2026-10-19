@@ -6,6 +6,8 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mrjavadseydi/telegram-webproxy-worker)
 
+⭐ **اگر این پروژه را دوست دارید، با [ستاره دادن](https://github.com/mrjavadseydi/telegram-webproxy-worker) از من حمایت کنید.**
+
 این پروژه سرور نوع جدید پروکسی تلگرام به نام **WEB proxy** است
 ([`telegramdesktop/tproxy-server`](https://github.com/telegramdesktop/tproxy-server)، پروتکل نسخه ۱)
 که کاملاً روی یک Cloudflare Worker اجرا می‌شود. به VPS یا نصب MTProxy نیازی نیست.
@@ -25,7 +27,9 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
 
 ## راه‌اندازی
 
-**با یک کلیک:** دکمه‌ی بالا را بزنید. Cloudflare یک کپی از مخزن در گیت‌هاب شما می‌سازد، مقدار `SECRET` را می‌پرسد (۳۲ کاراکتر hex، مثلاً خروجی `openssl rand -hex 16`) و Worker را منتشر می‌کند. بعد آدرس `https://<your-worker-host>/<SECRET>` را باز کنید تا لینک پروکسی‌تان را ببینید.
+**با یک کلیک:** دکمه‌ی بالا را بزنید. Cloudflare یک کپی از مخزن در گیت‌هاب شما می‌سازد، مقدار `SECRET` را می‌پرسد (**هر رمزی با حداقل ۸ کاراکتر**؛ هرچه بلندتر، امن‌تر) و Worker را منتشر می‌کند. بعد آدرس `https://<your-worker-host>/<your-password>` را باز کنید تا لینک پروکسی‌تان را ببینید.
+
+مقدار `SECRET` می‌تواند یک رمز باشد (Worker با SHA-256 آن را به سکرت MTProxy تبدیل می‌کند) یا مستقیماً یک سکرت ۳۲ کاراکتری hex، مثلاً خروجی `openssl rand -hex 16`.
 
 **به‌صورت دستی:**
 
@@ -40,7 +44,7 @@ npx wrangler deploy
 
 <div dir="rtl">
 
-> **دقت کنید:** اسم سکرت دقیقاً `SECRET` است. دستور `wrangler secret put SECRET` را بزنید و مقدار hex را وقتی پرسید وارد کنید. اگر خود مقدار را جای اسم بنویسید، Worker سکرتی پیدا نمی‌کند.
+> **دقت کنید:** اسم سکرت دقیقاً `SECRET` است. دستور `wrangler secret put SECRET` را بزنید و رمز یا مقدار hex را وقتی پرسید وارد کنید. اگر خود مقدار را جای اسم بنویسید، Worker سکرتی پیدا نمی‌کند.
 
 بهتر است یک **دامنه‌ی اختصاصی** به Worker وصل کنید (Workers → Settings → Domains & Routes)، مثلاً `proxy.example.com`. دامنه‌ی `*.workers.dev` هم کار می‌کند ولی در بعضی شبکه‌ها (از جمله ایران) ممکن است مسدود باشد. دامنه باید فقط برای همین Worker باشد، چون base path پشتیبانی نمی‌شود.
 
@@ -67,7 +71,7 @@ https://t.me/webproxy?server=proxy.example.com&secret=8561944064fc730cbfa4473562
 
 <div dir="rtl">
 
-خود Worker هم در آدرس `https://proxy.example.com/<SECRET>` صفحه‌ای نشان می‌دهد که سرور، سکرت، لینک‌های `t.me` و `tg://` را با دکمه‌ی کپی و یک دکمه‌ی «Open in Telegram» دارد. بقیه‌ی آدرس‌ها همان سایت معمولی را نشان می‌دهند، پس فقط کسی که سکرت را دارد این صفحه را پیدا می‌کند. این آدرس را جایی منتشر نکنید.
+خود Worker هم در آدرس `https://proxy.example.com/<SECRET>` (رمز یا مقدار hex شما) صفحه‌ای نشان می‌دهد که سرور، سکرت، لینک‌های `t.me` و `tg://` را با دکمه‌ی کپی و یک دکمه‌ی «Open in Telegram» دارد. بقیه‌ی آدرس‌ها همان سایت معمولی را نشان می‌دهند، پس فقط کسی که سکرت را دارد این صفحه را پیدا می‌کند. این آدرس را جایی منتشر نکنید.
 
 ## تست
 

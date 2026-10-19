@@ -1,12 +1,20 @@
 import assert from 'node:assert/strict';
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
-import { CtrStream, capability, checkToken, clientHandshake, dcHandshake, fromHex, mintToken } from './src/crypto.js';
+import { CtrStream, capability, checkToken, clientHandshake, dcHandshake, fromHex, mintToken, parseSecret } from './src/crypto.js';
 
 // Vectors from tproxy-server PROTOCOL.md
 assert.equal(await capability('proxy.example.com', fromHex('000102030405060708090a0b0c0d0e0f')),
   'MHLEY5PmW1GWqJkSrlmJpvJUiLhBH_QKy6yKg8a0JPk');
 assert.equal(await capability('proxy.example.com', fromHex('dd000102030405060708090a0b0c0d0e0f')),
   'IpJrt3e7sKtzPyoXy6w-Zj6GGEvsvclN66JzQEfPYLA');
+
+// SECRET: hex passes through, a password is hashed, short values are rejected
+assert.equal((await parseSecret('DD000102030405060708090a0b0c0d0e0f')).hex, 'dd000102030405060708090a0b0c0d0e0f');
+const pw = await parseSecret('  correct horse battery  ');
+assert.equal(pw.hex, createHash('sha256').update('correct horse battery').digest('hex').slice(0, 32));
+assert.equal(pw.password, 'correct horse battery');
+await assert.rejects(parseSecret('short'));
+await assert.rejects(parseSecret(undefined));
 
 // Tokens: valid, wrong kind, wrong key, expired, tampered
 const key = new Uint8Array(32).fill(7);
