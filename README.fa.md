@@ -1,0 +1,106 @@
+<div dir="rtl">
+
+# پروکسی WEB تلگرام روی Cloudflare Workers
+
+[English](README.md) | **فارسی**
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mrjavadseydi/telegram-webproxy-worker)
+
+این پروژه سرور نوع جدید پروکسی تلگرام به نام **WEB proxy** است
+([`telegramdesktop/tproxy-server`](https://github.com/telegramdesktop/tproxy-server)، پروتکل نسخه ۱)
+که کاملاً روی یک Cloudflare Worker اجرا می‌شود. به VPS یا نصب MTProxy نیازی نیست.
+
+</div>
+
+```text
+Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> Worker ──TCP──> Telegram DC
+```
+
+<div dir="rtl">
+
+- آدرس `GET /?bridge=<capability>` صفحه‌ی bridge را برمی‌گرداند. مقدار capability از روی نام دامنه و سکرت ساخته می‌شود. هر درخواست دیگری یک سایت ساده‌ی معمولی می‌بیند.
+- روش انتقال `websocket-lanes` است: برای هر اتصال TCP تلگرام یک WebSocket جدا. هر lane یک اجرای جداگانه‌ی Worker با یک اتصال خروجی است.
+- خود Worker نقش MTProxy را بازی می‌کند: ترافیک obfuscated2 اپ را با سکرت باز می‌کند، دوباره رمز می‌کند و مستقیم به دیتاسنتر تلگرام وصل می‌شود (بدون middle proxy).
+- بدون state است: توکن‌ها با HMAC امضا می‌شوند، پس به KV یا Durable Objects نیازی نیست.
+
+## راه‌اندازی
+
+**با یک کلیک:** دکمه‌ی بالا را بزنید. Cloudflare یک کپی از مخزن در گیت‌هاب شما می‌سازد، مقدار `SECRET` را می‌پرسد (۳۲ کاراکتر hex، مثلاً خروجی `openssl rand -hex 16`) و Worker را منتشر می‌کند. بعد آدرس `https://<your-worker-host>/<SECRET>` را باز کنید تا لینک پروکسی‌تان را ببینید.
+
+**به‌صورت دستی:**
+
+</div>
+
+```bash
+npm install
+openssl rand -hex 16                # your secret, e.g. 8561944064fc730cbfa4473562d8ec59
+npx wrangler secret put SECRET      # name is literally SECRET; paste the hex value at the prompt
+npx wrangler deploy
+```
+
+<div dir="rtl">
+
+> **دقت کنید:** اسم سکرت دقیقاً `SECRET` است. دستور `wrangler secret put SECRET` را بزنید و مقدار hex را وقتی پرسید وارد کنید. اگر خود مقدار را جای اسم بنویسید، Worker سکرتی پیدا نمی‌کند.
+
+بهتر است یک **دامنه‌ی اختصاصی** به Worker وصل کنید (Workers → Settings → Domains & Routes)، مثلاً `proxy.example.com`. دامنه‌ی `*.workers.dev` هم کار می‌کند ولی در بعضی شبکه‌ها (از جمله ایران) ممکن است مسدود باشد. دامنه باید فقط برای همین Worker باشد، چون base path پشتیبانی نمی‌شود.
+
+## اتصال کلاینت
+
+به کلاینتی نیاز دارید که از WEB proxy پشتیبانی کند (Telegram Desktop نسخه‌ی 7.2 به بالا). یک پروکسی از نوع WEB اضافه کنید:
+
+</div>
+
+```text
+Server: proxy.example.com
+Secret: 8561944064fc730cbfa4473562d8ec59
+```
+
+<div dir="rtl">
+
+یا این لینک را باز کنید یا به اشتراک بگذارید:
+
+</div>
+
+```text
+https://t.me/webproxy?server=proxy.example.com&secret=8561944064fc730cbfa4473562d8ec59
+```
+
+<div dir="rtl">
+
+خود Worker هم در آدرس `https://proxy.example.com/<SECRET>` صفحه‌ای نشان می‌دهد که سرور، سکرت، لینک‌های `t.me` و `tg://` را با دکمه‌ی کپی و یک دکمه‌ی «Open in Telegram» دارد. بقیه‌ی آدرس‌ها همان سایت معمولی را نشان می‌دهند، پس فقط کسی که سکرت را دارد این صفحه را پیدا می‌کند. این آدرس را جایی منتشر نکنید.
+
+## تست
+
+</div>
+
+```bash
+npm test                                                    # crypto / token / capability self-check
+echo 'SECRET=8561944064fc730cbfa4473562d8ec59' > .dev.vars
+npm run dev                                                 # local worker on :8787
+node smoke.mjs http://localhost:8787 8561944064fc730cbfa4473562d8ec59      # -> resPQ OK
+node smoke.mjs https://proxy.example.com 8561944064fc730cbfa4473562d8ec59  # deployed
+```
+
+<div dir="rtl">
+
+اسکریپت `smoke.mjs` صفحه‌ی bridge را می‌گیرد، session می‌سازد، یک lane باز می‌کند و از طریق Worker درخواست `req_pq_multi` را به یک دیتاسنتر تلگرام می‌فرستد. اگر تلگرام با `resPQ` جواب بدهد، تست موفق است. آرگومان سوم (اختیاری) شماره‌ی دیتاسنتر است (پیش‌فرض `2`).
+
+برای دیدن اتصال‌های زنده هنگام استفاده از تلگرام:
+
+</div>
+
+```bash
+npx wrangler tail --format pretty
+```
+
+<div dir="rtl">
+
+## محدودیت‌ها
+
+- **مصرف CPU:** پلن رایگان روی کاغذ ۱۰ میلی‌ثانیه CPU برای هر اجرا می‌دهد. در تست ما پیام‌ها و دانلود عکس و ویدیو کار کردند، ولی اگر در `wrangler tail` خطای `Exceeded CPU` دیدید، پلن Paid بگیرید و `[limits] cpu_ms` را در `wrangler.toml` فعال کنید.
+- فقط روش `websocket-lanes` پشتیبانی می‌شود. روش‌های `https`، `https-lanes` و `websocket` به state مشترک (Durable Objects) نیاز دارند.
+- توکن bootstrap یک‌بارمصرف نیست؛ فقط در عمر ۲ دقیقه‌ای‌اش و فقط توسط کسی که صفحه‌ی bridge را باز کرده قابل استفاده‌ی دوباره است.
+- سکرت می‌تواند ساده یا با پیشوند `dd` باشد. سکرت‌های `ee` (fake-TLS) پشتیبانی نمی‌شوند.
+- این پروتکل فعلاً آزمایشی (proof of concept) تلگرام است و ممکن است تغییر کند.
+
+</div>

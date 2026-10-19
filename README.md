@@ -1,5 +1,7 @@
 # Telegram WEB Proxy for Cloudflare Workers
 
+**English** | [فارسی](README.fa.md)
+
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mrjavadseydi/telegram-webproxy-worker)
 
 A server for Telegram's new **WEB proxy** type
@@ -74,9 +76,9 @@ argument picks the DC (default `2`).
 
 ## Limits
 
-- **Use the Workers Paid plan.** The Free plan allows 10 ms of CPU per invocation, and a busy
-  lane (media) runs out of it. On the Paid plan you can uncomment `[limits] cpu_ms` in
-  `wrangler.toml`.
+- **CPU:** the Free plan nominally allows 10 ms of CPU per invocation. In testing, messages,
+  photos and video worked anyway, but if `wrangler tail` shows `Exceeded CPU`, switch to the Paid
+  plan and uncomment `[limits] cpu_ms` in `wrangler.toml`.
 - Only the `websocket-lanes` carrier is supported. `https`, `https-lanes` and `websocket` would
   need shared session state (Durable Objects).
 - The bootstrap token is not single-use. It can be replayed only within its 2-minute lifetime,
