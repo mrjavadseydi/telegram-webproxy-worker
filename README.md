@@ -22,7 +22,7 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
 ```bash
 npm install
 openssl rand -hex 16                # your secret, e.g. 8561944064fc730cbfa4473562d8ec59
-npx wrangler secret put SECRET      # paste it (32 hex chars, optional "dd" prefix)
+npx wrangler secret put SECRET      # name is literally SECRET; paste the hex value at the prompt
 npx wrangler deploy
 ```
 

@@ -54,7 +54,8 @@ const isHello = (b) => b.length === HELLO.length && b.every((x, i) => x === HELL
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const secret = parseSecret(env.SECRET);
+    let secret;
+    try { secret = parseSecret(env.SECRET); } catch (e) { return new Response(e.message + ' (npx wrangler secret put SECRET)', { status: 500 }); }
     const host = url.hostname;
     const key = await hmac(secret.raw, new TextEncoder().encode('tproxy-worker-token-key'));
 
