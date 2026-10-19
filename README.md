@@ -1,4 +1,6 @@
-# Telegram WEB proxy on Cloudflare Workers
+# Telegram WEB Proxy for Cloudflare Workers
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mrjavadseydi/telegram-webproxy-worker)
 
 A server for Telegram's new **WEB proxy** type
 ([`telegramdesktop/tproxy-server`](https://github.com/telegramdesktop/tproxy-server), protocol v1),
@@ -18,6 +20,12 @@ Telegram app ──MTProxy (obfuscated2)──> hidden WebView ──wss──> 
   Objects.
 
 ## Deploy
+
+**One click:** press the button above. Cloudflare copies the repo into your GitHub account,
+asks for `SECRET` (32 hex chars, e.g. `openssl rand -hex 16`), and deploys. Then open
+`https://<your-worker-host>/<SECRET>` for your proxy link.
+
+**Manually:**
 
 ```bash
 npm install

@@ -1,5 +1,5 @@
 {
-  "name": "telegram-web-proxy-worker",
+  "name": "telegram-webproxy-worker",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,5 +9,12 @@
   },
   "devDependencies": {
     "wrangler": "^4.151.2"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SECRET": {
+        "description": "Proxy secret: **32 hex characters** (`0-9a-f`), e.g. the output of `openssl rand -hex 16`. Clients enter it next to the Worker hostname; keep it private."
+      }
+    }
   }
 }

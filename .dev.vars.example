@@ -1,0 +1,1 @@
+SECRET=replace-with-32-hex-chars # e.g. output of: openssl rand -hex 16
