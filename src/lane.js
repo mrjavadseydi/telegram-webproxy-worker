@@ -38,9 +38,12 @@ export function openLane(id, secretKey, protocol) {
   let socket = null, writer = null, c = null, d = null, chain = Promise.resolve();
 
   const send = (f) => { try { ws.send(f); } catch {} };
-  const end = (notify) => {
+  // One log line per lane, visible in `wrangler tail`.
+  const t0 = Date.now(); let up = 0, down = 0;
+  const end = (notify, why = notify ? 'relay' : 'app') => {
     if (ended) return;
     ended = true;
+    console.log('LANE ' + JSON.stringify({ dc: c?.dc ?? null, tag: c ? c.tag[0].toString(16) : null, up, down, ms: Date.now() - t0, why }));
     if (notify) send(frame(CLOSE, id));
     try { ws.close(1000); } catch {}
     if (socket) socket.close().catch(() => {});
@@ -49,11 +52,14 @@ export function openLane(id, secretKey, protocol) {
 
   async function pump() {
     const reader = socket.readable.getReader();
+    reader.closed.catch(() => {});
     try {
       for (;;) {
         const { value, done } = await reader.read();
-        if (done || ended) break;
-        const out = await c.encrypt.update(await d.decrypt.update(value));
+        if (done || ended) { end(true, 'dc EOF'); break; }
+        const plain = await d.decrypt.update(value);
+        down += plain.length;
+        const out = await c.encrypt.update(plain);
         for (let off = 0; off < out.length;) {
           while (!credit && !ended) await new Promise((r) => (wake = r));
           if (ended) return;
@@ -63,7 +69,7 @@ export function openLane(id, secretKey, protocol) {
           off += n;
         }
       }
-    } catch {}
+    } catch (e) { end(true, 'dc read: ' + e.message); }
     end(true);
   }
 
@@ -78,12 +84,15 @@ export function openLane(id, secretKey, protocol) {
       socket = connect({ hostname, port: 443 });
       writer = socket.writable.getWriter();
       socket.closed.catch(() => {});
+      writer.closed.catch(() => {});
+      up += head.length - 64;
       await writer.write(concat(d.header, await d.encrypt.update(await c.decrypt.update(head.subarray(64)))));
       pump();
       send(frame(WINDOW, id, u32(head.length)));
       head = null;
       return;
     }
+    up += p.length;
     await writer.write(await d.encrypt.update(await c.decrypt.update(p)));
     send(frame(WINDOW, id, u32(p.length))); // credit back only once the bytes reached the DC socket
   }
@@ -95,15 +104,15 @@ export function openLane(id, secretKey, protocol) {
         if (f.id !== id || (!opened && f.type !== OPEN) || (opened && f.type === OPEN)) throw new Error('bad frame');
         if (f.type === OPEN) opened = true;
         else if (f.type === WINDOW) { credit += new DataView(f.payload.buffer, f.payload.byteOffset).getUint32(0); if (wake) wake(); }
-        else if (f.type === CLOSE) end(false);
+        else if (f.type === CLOSE) end(false, 'app CLOSE');
         else if (f.type === DATA && f.payload.length) { const p = f.payload.slice(); chain = chain.then(() => !ended && data(p)); }
         else throw new Error('bad frame');
       }
-      chain = chain.catch(() => end(true));
-    } catch { end(true); }
+      chain = chain.catch((e) => end(true, 'uplink: ' + e.message));
+    } catch (e) { end(true, 'frame: ' + e.message); }
   });
-  ws.addEventListener('close', () => end(false));
-  ws.addEventListener('error', () => end(false));
+  ws.addEventListener('close', () => end(false, 'ws close'));
+  ws.addEventListener('error', () => end(false, 'ws error'));
 
   return new Response(null, { status: 101, webSocket: client, headers: { 'Sec-WebSocket-Protocol': protocol } });
 }
